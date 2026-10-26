@@ -43,7 +43,10 @@ transition: 0.3s;
 .navbar li{
     cursor: pointer;
 }
-.navbar-search-icon.dot{
+.navbar-search-icon {
+    position: relative;
+}
+.navbar-search-icon .dot{
     position: absolute;
     min-width: 10px;
     min-height: 10px;
@@ -98,4 +101,3 @@ transition: 0.3s;
 display: none;
 }
 }
-
