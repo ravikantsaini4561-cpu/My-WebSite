@@ -22,5 +22,10 @@ hr{
   background-color: #a9a9a9 ;
 }
 .app-content{
-  display: flex;
+display: flex;
 }
+.flex-col{
+display: flex;
+flex-direction: column;
+gap: 10px;
+ }
