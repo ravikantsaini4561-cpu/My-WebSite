@@ -4,18 +4,50 @@ import { useState } from 'react'
 
 const Add = () => {
 
+  const url = "http://localhost:4000"
+
 const [image,setImage] = useState(false)
 const [data,setData] = useState({
        name:"",
        description:"",
        price:"",
        category:"Salad"
+
 })
 
+const onChangeHandler = (event) => {
+  const name = event.target.name;
+  const value = event.target.value;
+  setData(data=>({...data,[name]:value}))
+ 
+}
+  const onSubmitHandler = async (event) =>{
+ event.preventDefault();
+ const formData = new FormData();
+  formData.append("name",data.name)
+  formData.append("description",data.description)
+  formData.append("price",Number(data.price))
+  formData.append("category",data.category)
+  formData.append("image",image)
+  const response = await fetch(`${url}/api/food/add`, { method: 'POST', body: formData });
+  if (response.ok && (await response.json()).success) {
+      setData({  name:"",
+       description:"",
+       price:"",
+       category:"Salad"
+      })
+      setImage(false)
+      alert('Food added successfully')
+  }
+  else{
+
+  }
+ 
+  }
 
   return (
     <div className='add'>
-      <form  className='flex-col'>
+      <form  className='flex-col' onSubmit={onSubmitHandler}>
         <div className="add-image-upload flex-col">
           <p>Upload Image</p>
           <label htmlFor="image">
@@ -25,16 +57,16 @@ const [data,setData] = useState({
         </div>
         <div className="add-product-name flex-col">
           <p>Product name</p>
-            <input type="text" name="name"  placeholder='Type here'/>
+            <input  onChange ={onChangeHandler} value={data.name} type="text" name="name"  placeholder='Type here'/>
         </div>
         <div className="add-product-description flex-col">
           <p>Product description</p>
-          <textarea name="description" rows="6" placeholder='Write content here'></textarea>
+          <textarea  onChange ={onChangeHandler} value={data.description} name="description" rows="6" placeholder='Write content here'></textarea>
         </div>
         <div className="add-category-price">
           <div className="add-category flex-col">
               <p>Product category</p>
-              <select name="category">
+              <select  onChange ={onChangeHandler} name="category">
                 <option value="Salad">Salad</option>
                 <option value="Rolls">Rolls</option>
                 <option value="Deserts">Deserts</option>
@@ -46,8 +78,8 @@ const [data,setData] = useState({
               </select>
           </div>
           <div className="add-price flex-col">
-            <p>Product price</p>
-            <input type="number" name="price" placeholder="₹200" />
+            <p>Product price (₹)</p>
+            <input  onChange ={onChangeHandler}  value ={data.price} type="number" name="price" placeholder="₹200" />
           </div>
         </div>
         <button type='submit' className='add-btn'>ADD</button>
