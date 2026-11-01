@@ -1,6 +1,9 @@
 import foodModel from "../models/foodModel.js";
-import fs from 'fs'
+import { unlink } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
+const uploadsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../uploads");
 
 // add food item
 
@@ -21,6 +24,11 @@ const addFood = async (req,res) => {
     res.json({success:true,message:"Food Added"})
   } catch (error) {
      console.error("Failed to save food:", error);
+     try {
+       await unlink(path.join(uploadsDir, req.file.filename));
+     } catch (cleanupError) {
+       console.error("Failed to remove image after food save failed:", cleanupError);
+     }
      res.status(500).json({success:false,message:error.message})
   }
 
@@ -32,23 +40,33 @@ const listFood = async (req, res) => {
     const foods = await foodModel.find({});
     res.json({ success: true, data: foods });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Error" });
+    console.error("Failed to load food list:", error);
+    res.status(500).json({ success: false, message: "Failed to load food list" });
   }
 };
 
 // remove food item
 const removeFood = async (req,res) => {
-     try {
-          const food = await foodModel.findByID(req.body.id);
-          fs.unlink('uploads/${food.image}',()=>{})
+  try {
+    const food = await foodModel.findByIdAndDelete(req.body.id);
+    if (!food) {
+      return res.status(404).json({ success: false, message: "Food not found" });
+    }
 
-          await foodModel.findByIDAndDelete(req.body.id);
-          res.json({success:true,message:"Food Removed"})
-      } catch (error) {
-        console.log(error);
-        res.json({success:false,message:"Error "})
+    try {
+      await unlink(path.join(uploadsDir, food.image));
+    } catch (error) {
+      if (error.code !== "ENOENT") {
+        console.error("Failed to remove food image:", error);
+        return res.status(500).json({ success: false, message: "Food removed, but its image could not be deleted" });
       }
+    }
+
+    res.json({ success: true, message: "Food Removed" });
+  } catch (error) {
+    console.error("Failed to remove food:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 }
 
 export { addFood, listFood,removeFood};
